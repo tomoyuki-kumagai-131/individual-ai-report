@@ -2,7 +2,9 @@ import Link from "next/link";
 import { getUser } from "@/lib/supabase/server";
 import { listPostsForLocalDay } from "@/db/queries/posts";
 import { getReportsForDate } from "@/db/queries/reports";
+import { getProfile } from "@/db/queries/profiles";
 import { REPORT_TYPE_META } from "@/types";
+import { ProfileCard } from "@/components/profile-card";
 import { localDateString } from "@/lib/time";
 import { PostComposer } from "@/components/post-composer";
 import { PostList } from "@/components/post-list";
@@ -30,9 +32,10 @@ export default async function DashboardPage() {
     }).format(new Date()),
   );
 
-  const [posts, todaysReports] = await Promise.all([
+  const [posts, todaysReports, profile] = await Promise.all([
     listPostsForLocalDay(user.id, today),
     getReportsForDate(user.id, today),
+    getProfile(user.id),
   ]);
   const hasReport = todaysReports.length > 0;
 
@@ -93,6 +96,14 @@ export default async function DashboardPage() {
           <AnalyzeButton disabled={posts.length === 0} />
         )}
       </div>
+
+      {/* Accumulated profile (grows as reports are generated) */}
+      {profile && (
+        <ProfileCard
+          content={profile.content}
+          updatedAt={profile.updatedAt.toISOString().slice(0, 10)}
+        />
+      )}
 
       {/* Timeline */}
       <section className="flex flex-col gap-3">

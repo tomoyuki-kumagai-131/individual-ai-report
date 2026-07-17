@@ -1,6 +1,8 @@
 import { analyzeDay } from "@/lib/ai/analyze";
+import { updateUserProfile } from "@/lib/ai/profile";
 import { listPostsForLocalDay } from "@/db/queries/posts";
 import { upsertReport } from "@/db/queries/reports";
+import { getProfile, upsertProfile } from "@/db/queries/profiles";
 import { previousLocalDate } from "@/lib/time";
 import type { PostForAnalysis, ReportType } from "@/types";
 import type { Report } from "@/db/schema";
@@ -39,7 +41,15 @@ export async function generateReport(
     createdAt: p.createdAt.toISOString(),
   }));
 
-  const { payload, model } = await analyzeDay(type, analyzeDate, forAnalysis);
+  // Load the accumulated profile so the analysis reflects long-term patterns.
+  const profile = await getProfile(userId);
+
+  const { payload, model } = await analyzeDay(
+    type,
+    analyzeDate,
+    forAnalysis,
+    profile?.content ?? null,
+  );
 
   const report = await upsertReport({
     userId,
@@ -49,6 +59,24 @@ export async function generateReport(
     model,
     postCount: posts.length,
   });
+
+  // Fold this day into the profile. Best-effort: a failure here must not fail
+  // the report the user is waiting on.
+  try {
+    const content = await updateUserProfile({
+      existing: profile?.content ?? null,
+      analyzeDate,
+      posts: forAnalysis,
+      payload,
+    });
+    await upsertProfile({
+      userId,
+      content,
+      reportCount: (profile?.reportCount ?? 0) + 1,
+    });
+  } catch (err) {
+    console.error("profile update failed (non-fatal):", err);
+  }
 
   return { status: "generated", report };
 }

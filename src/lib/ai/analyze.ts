@@ -26,6 +26,7 @@ export async function analyzeDay(
   type: ReportType,
   analyzeDate: string,
   posts: PostForAnalysis[],
+  profile?: string | null,
 ): Promise<AnalyzeResult> {
   if (posts.length === 0) {
     throw new Error(`No posts to analyze for ${analyzeDate}`);
@@ -40,7 +41,10 @@ export async function analyzeDay(
     tools: [REPORT_TOOL],
     tool_choice: { type: "tool", name: REPORT_TOOL.name },
     messages: [
-      { role: "user", content: buildUserMessage(type, analyzeDate, posts) },
+      {
+        role: "user",
+        content: buildUserMessage(type, analyzeDate, posts, profile),
+      },
     ],
   });
 

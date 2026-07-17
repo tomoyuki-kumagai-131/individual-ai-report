@@ -8,6 +8,7 @@ import {
   index,
   uniqueIndex,
   smallint,
+  integer,
 } from "drizzle-orm/pg-core";
 import type { ReportPayload, ReportType } from "@/types";
 
@@ -59,7 +60,26 @@ export const reports = pgTable(
   ],
 );
 
+/**
+ * A single, continuously-updated "profile" of the user — accumulated tendencies,
+ * recurring themes, values, and what helps them. One row per user. Each report
+ * folds its day's insights into this profile (see src/lib/ai/profile.ts), and
+ * the analysis reads it back so advice reflects long-term patterns (approach A,
+ * no embeddings/vector store required).
+ */
+export const profiles = pgTable("profiles", {
+  userId: uuid("user_id").primaryKey(),
+  content: text("content").notNull(),
+  // How many reports have been folded into this profile.
+  reportCount: integer("report_count").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 export type Report = typeof reports.$inferSelect;
 export type NewReport = typeof reports.$inferInsert;
+export type Profile = typeof profiles.$inferSelect;
+export type NewProfile = typeof profiles.$inferInsert;

@@ -100,6 +100,7 @@ export function buildUserMessage(
   type: ReportType,
   analyzeDate: string,
   posts: PostForAnalysis[],
+  profile?: string | null,
 ): string {
   const lines = posts.map((p, i) => {
     const time = new Date(p.createdAt).toISOString();
@@ -112,8 +113,15 @@ export function buildUserMessage(
       ? `今日は朝です。以下は「昨日(${analyzeDate})」ユーザーが投稿した思い・考えです（時刻順）。\n昨日を振り返り、今日やるべきことを提案してください。`
       : `以下は「本日(${analyzeDate})」ユーザーが投稿した思い・考えです（時刻順）。\n今日を振り返ってください。`;
 
+  // Long-term context: the accumulated profile lets the analysis reference
+  // recurring patterns ("以前も同じ思考のクセが…") instead of judging each day
+  // in isolation.
+  const profileBlock = profile?.trim()
+    ? `\n\n--- これまでのあなたの傾向（参考） ---\n${profile}\n--- ここまで ---\n過去の傾向を踏まえ、繰り返しのパターンがあれば優しく触れつつ分析してください。`
+    : "";
+
   return `${frame}
-これらを分析し、record_report ツールで結果を記録してください。
+これらを分析し、record_report ツールで結果を記録してください。${profileBlock}
 
 --- 投稿 ---
 ${lines.join("\n")}
