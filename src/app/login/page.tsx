@@ -98,7 +98,7 @@ export default function LoginPage() {
             Mind Report
           </h1>
           <p className="mt-1 text-sm text-default-500">
-            思いを綴ると、毎日20時にAIが1日を振り返ります。
+            思いを綴ると、朝6時と夜18時にAIが振り返りを届けます。
           </p>
         </div>
       </div>
