@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const LINKS = [
   { href: "/dashboard", label: "今日" },
+  { href: "/calendar", label: "カレンダー" },
   { href: "/reports", label: "レポート" },
 ];
 

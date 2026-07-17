@@ -57,6 +57,34 @@ export async function getReportsForDate(
     .orderBy(desc(reports.type));
 }
 
+export interface ReportSummary {
+  reportDate: string;
+  type: ReportType;
+  moodScore: number;
+}
+
+/** Lightweight per-report summaries for the calendar view. */
+export async function listReportSummaries(
+  userId: string,
+  limit = 400,
+): Promise<ReportSummary[]> {
+  const rows = await db
+    .select({
+      reportDate: reports.reportDate,
+      type: reports.type,
+      payload: reports.payload,
+    })
+    .from(reports)
+    .where(eq(reports.userId, userId))
+    .orderBy(desc(reports.reportDate))
+    .limit(limit);
+  return rows.map((r) => ({
+    reportDate: r.reportDate,
+    type: r.type,
+    moodScore: r.payload.moodScore,
+  }));
+}
+
 /** Fetch one report by date + type, or null. */
 export async function getReport(
   userId: string,
